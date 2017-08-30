@@ -1,6 +1,6 @@
 #TOKEN types
 #EOF == no more input left for lexical analysis
-INTEGER, PLUS, EOF = 'INTEGER','PLUS','EOF'
+INTEGER, PLUS, MINUS, EOF = 'INTEGER','PLUS','MINUS', 'EOF'
 
 class Token(object):
     def __init__(self,type,value):
@@ -33,24 +33,35 @@ class Interpreter(object):
     def error(self):
         raise Exception('Error parsing input')
     def get_next_token(self):
+        while(self.pos<len(self.text)-1 and self.text[self.pos]==" "):
+            self.pos+=1
         if self.pos>len(self.text)-1:
             return Token(EOF,None)
-    
         current_char=self.text[self.pos]
+        end_pos=self.pos
         if current_char.isdigit():
-            token=Token(INTEGER,int(current_char))
-            self.pos+=1
-            print(token)
+            while (end_pos+1<len(self.text) and self.text[end_pos+1].isdigit()):
+                end_pos+=1
+            token=Token(INTEGER,int(self.text[self.pos:end_pos+1]))
+            self.pos+=end_pos+1
             return token
         if current_char=='+':
             token=Token(PLUS,current_char)
             self.pos+=1
-            print(token)
+            return token
+        if current_char=='-':
+            token=Token(MINUS,current_char)
+            self.pos+=1
             return token
         self.error()
 
     def eat(self,token_type):
         if self.current_token.type==token_type:
+            self.current_token=self.get_next_token()
+        else:
+            self.error()
+    def ops(self,plus,minus):
+        if self.current_token.type==plus or self.current_token.type==minus:
             self.current_token=self.get_next_token()
         else:
             self.error()
@@ -63,11 +74,14 @@ class Interpreter(object):
         left=self.current_token
         self.eat(INTEGER)
         op = self.current_token
-        self.eat(PLUS)
+        self.ops(PLUS,MINUS)
         right = self.current_token
         self.eat(INTEGER)
 
-        res=left.value+right.value
+        if op.value=="+":
+            res=left.value+right.value
+        elif op.value=="-":
+             res=left.value-right.value
         return res
 
 
