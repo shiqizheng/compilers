@@ -4,7 +4,7 @@ INTEGER, PLUS, MINUS, EOF = 'INTEGER','PLUS','MINUS', 'EOF'
 
 class Token(object):
     def __init__(self,type,value):
-        self.type=type #INTEGER, PLUS OR EOF
+        self.type=type #INTEGER, PLUS, MINUS OR EOF
         self.value=value # 0-9, '+', or None
     
     def __str__(self):
@@ -60,11 +60,6 @@ class Interpreter(object):
             self.current_token=self.get_next_token()
         else:
             self.error()
-    def ops(self,plus,minus):
-        if self.current_token.type==plus or self.current_token.type==minus:
-            self.current_token=self.get_next_token()
-        else:
-            self.error()
 
     def expr(self):
         # expr -> INTEGER PLUS INTEGER
@@ -74,7 +69,10 @@ class Interpreter(object):
         left=self.current_token
         self.eat(INTEGER)
         op = self.current_token
-        self.ops(PLUS,MINUS)
+        if op.type==PLUS:
+            self.eat(PLUS)
+        elif op.type==MINUS:
+            self.eat(MINUS)
         right = self.current_token
         self.eat(INTEGER)
 
