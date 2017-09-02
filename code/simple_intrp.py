@@ -39,11 +39,13 @@ class Interpreter(object):
             return Token(EOF,None)
         current_char=self.text[self.pos]
         end_pos=self.pos
+        # print("end_pos:%d"%end_pos)
         if current_char.isdigit():
             while (end_pos+1<len(self.text) and self.text[end_pos+1].isdigit()):
                 end_pos+=1
             token=Token(INTEGER,int(self.text[self.pos:end_pos+1]))
-            self.pos+=end_pos+1
+            self.pos=end_pos+1
+            # print("pos:%d"%self.pos)
             return token
         if current_char=='+':
             token=Token(PLUS,current_char)
@@ -61,25 +63,26 @@ class Interpreter(object):
         else:
             self.error()
 
+    def term(self):
+        """Return an INTEGER token value"""
+        token = self.current_token
+        self.eat(INTEGER)
+        return token.value
     def expr(self):
         # expr -> INTEGER PLUS INTEGER
         # set current token to the first token from the input
         self.current_token=self.get_next_token()
         #validate current token
-        left=self.current_token
-        self.eat(INTEGER)
-        op = self.current_token
-        if op.type==PLUS:
-            self.eat(PLUS)
-        elif op.type==MINUS:
-            self.eat(MINUS)
-        right = self.current_token
-        self.eat(INTEGER)
-
-        if op.value=="+":
-            res=left.value+right.value
-        elif op.value=="-":
-             res=left.value-right.value
+        res=self.term()
+        while self.current_token.type in (PLUS,MINUS):
+            token=self.current_token
+            # print(self.current_token)
+            if token.type==PLUS:
+                self.eat(PLUS)
+                res=res+self.term()
+            elif token.type==MINUS:
+                self.eat(MINUS)
+                res=res-self.term()
         return res
 
 
