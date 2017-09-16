@@ -1,6 +1,6 @@
 #TOKEN types
 #EOF == no more input left for lexical analysis
-INTEGER, PLUS, MINUS, EOF = 'INTEGER','PLUS','MINUS', 'EOF'
+INTEGER, PLUS, MINUS,MUL,DIV,EOF = 'INTEGER','PLUS','MINUS','MUL','DIV','EOF'
 
 class Token(object):
     def __init__(self,type,value):
@@ -29,7 +29,11 @@ class Interpreter(object):
         #index into self.text
         self.pos=0
         #current token instance
-        self.current_token=None
+        self.current_token=self.get_next_token()
+    def factor(self):
+        token = self.current_token
+        self.eat(INTEGER)
+        return token.value
     def error(self):
         raise Exception('Error parsing input')
     def get_next_token(self):
@@ -55,6 +59,14 @@ class Interpreter(object):
             token=Token(MINUS,current_char)
             self.pos+=1
             return token
+        if current_char=='*':
+            token=Token(MUL,current_char)
+            self.pos+=1
+            return token
+        if current_char=='/':
+            token=Token(DIV,current_char)
+            self.pos+=1
+            return token
         self.error()
 
     def eat(self,token_type):
@@ -63,27 +75,52 @@ class Interpreter(object):
         else:
             self.error()
 
+    # def term(self):
+    #     """Return an INTEGER token value"""
+    #     token = self.current_token
+    #     self.eat(INTEGER)
+    #     return token.value
+    # # def expr(self):
+    # #     # expr -> INTEGER PLUS INTEGER
+    # #     # set current token to the first token from the input
+    # #     self.current_token=self.get_next_token()
+    # #     #validate current token
+    # #     res=self.term()
+    # #     while self.current_token.type in (PLUS,MINUS):
+    # #         token=self.current_token
+    # #         # print(self.current_token)
+    # #         if token.type==PLUS:
+    # #             self.eat(PLUS)
+    # #             res=res+self.term()
+    # #         elif token.type==MINUS:
+    # #             self.eat(MINUS)
+    # #             res=res-self.term()
+    # #     return res
     def term(self):
-        """Return an INTEGER token value"""
-        token = self.current_token
-        self.eat(INTEGER)
-        return token.value
+      result = self.factor()
+      while self.current_token.type in (MUL,DIV):
+          token=self.current_token
+          if token.type==MUL:
+              self.eat(MUL)
+              result=result*self.factor()
+          elif token.type==DIV:
+              self.eat(DIV)
+              result=result/self.factor()
+      return result
+            
+
     def expr(self):
-        # expr -> INTEGER PLUS INTEGER
-        # set current token to the first token from the input
-        self.current_token=self.get_next_token()
-        #validate current token
-        res=self.term()
-        while self.current_token.type in (PLUS,MINUS):
-            token=self.current_token
-            # print(self.current_token)
-            if token.type==PLUS:
+        result = self.term()
+        while self.current_token.type in (PLUS, MINUS):
+            token = self.current_token
+            if token.type == PLUS:
                 self.eat(PLUS)
-                res=res+self.term()
-            elif token.type==MINUS:
+                result = result + self.term()
+            elif token.type == MINUS:
                 self.eat(MINUS)
-                res=res-self.term()
-        return res
+                result = result - self.term()
+
+        return result
 
 
 def main():
