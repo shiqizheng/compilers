@@ -1,6 +1,6 @@
 #TOKEN types
 #EOF == no more input left for lexical analysis
-INTEGER, PLUS, MINUS,MUL,DIV,EOF = 'INTEGER','PLUS','MINUS','MUL','DIV','EOF'
+INTEGER, PLUS, MINUS,MUL,DIV,LPAREN,RPAREN,EOF = 'INTEGER','PLUS','MINUS','MUL','DIV','(',')','EOF'
 
 class Token(object):
     def __init__(self,type,value):
@@ -32,8 +32,14 @@ class Interpreter(object):
         self.current_token=self.get_next_token()
     def factor(self):
         token = self.current_token
-        self.eat(INTEGER)
-        return token.value
+        if token.type==INTEGER:
+            self.eat(INTEGER)
+            return token.value
+        elif token.type==LPAREN:
+            self.eat(LPAREN)
+            result=self.expr()
+            self.eat(RPAREN)
+            return result
     def error(self):
         raise Exception('Error parsing input')
     def get_next_token(self):
@@ -67,6 +73,15 @@ class Interpreter(object):
             token=Token(DIV,current_char)
             self.pos+=1
             return token
+        if current_char == '(':
+            token=Token(LPAREN,current_char)
+            self.pos+=1
+            return Token(LPAREN, '(')
+        if current_char == ')':
+            token=Token(RPAREN,current_char)
+            self.pos+=1
+            return Token(RPAREN, ')')
+
         self.error()
 
     def eat(self,token_type):
